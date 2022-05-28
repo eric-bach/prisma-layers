@@ -6,8 +6,8 @@ export const handler = async () => {
   const user = await createUser('Alice', `alice-${uuidv4()}.prisma.io`);
   console.log('Created user: ', user);
 
-  // return {
-  //   statusCode: 200,
-  //   body: { user: user },
-  // };
+  return {
+    statusCode: 200,
+    body: 'Created user',
+  };
 };

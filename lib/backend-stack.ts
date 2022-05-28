@@ -6,7 +6,7 @@ import { InstanceClass, InstanceSize, InstanceType, SecurityGroup, Vpc } from 'a
 import * as path from 'path';
 import { AuroraPostgresEngineVersion, DatabaseCluster, DatabaseClusterEngine } from 'aws-cdk-lib/aws-rds';
 
-export class MembershipFoundationsStack extends Stack {
+export class PrismaStack extends Stack {
   constructor(scope: Construct, id: string, props?: StackProps) {
     super(scope, id, props);
 

@@ -29,25 +29,3 @@ Docker Desktop is required on the local system for this build.
    ```
    npm run build && cdk deploy --all --require-approval never --profile AWS_PROFILE_NAME
    ```
-
-# Running interactive terminal in the AWS Lambda container image
-
-AWS Lambda container image - https://gallery.ecr.aws/lambda/nodejs
-
-1. Get the public image
-
-   ```
-   docker pull public.ecr.aws/lambda/nodejs:14
-   ```
-
-2. Get the image ID
-
-   ```
-   docker image ls
-   ```
-
-3. Run the image with a mount to local disk
-
-   ```
-   docker run -v /c/AMAABCA:/tmp -it --entrypoint sh IMAGE_ID
-   ```
