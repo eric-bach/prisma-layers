@@ -12,20 +12,26 @@ Docker Desktop is required on the local system for this build.
    npm install
    ```
 
-2. Install Lambda dependencies
+2. Install Lambda dependencies in the `/src/lambda/userService` folder
 
    ```bash
-   cd /src/lambda/userService && npm install
+   npm install
    ```
 
-3. Install Prisma Layer dependencies
+3. Install Prisma Layer dependencies in the `/src/layers/prisma` folder
 
    ```bash
-   cd /src/lambda/userService && PRISMA_CLI_BINARY_TARGETS=rhel-openssl-1.0.x npm install
+   PRISMA_CLI_BINARY_TARGETS=rhel-openssl-1.0.x npm install
    ```
 
-4. Build and deploy CDK
+4. Build the project
 
    ```
-   npm run build && cdk deploy --all --require-approval never --profile AWS_PROFILE_NAME
+   npm run build
+   ```
+
+5. Deploy CDK
+
+   ```
+   npx cdk deploy --all --require-approval never --profile AWS_PROFILE_NAME
    ```

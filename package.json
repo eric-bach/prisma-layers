@@ -9,10 +9,7 @@
   "scripts": {
     "build": "tsc",
     "watch": "tsc -w",
-    "test": "npm run build && jest --watchAll=false --coverage",
-    "cdk": "node node_modules/aws-cdk/bin/cdk.js",
-    "deploy": "npm run build && node ./helpers/cdkDeploy.js",
-    "deploy-baseStacks": "npm run build && node ./helpers/cdkDeploy.js base"
+    "test": "npm run build && jest --watchAll=false --coverage"
   },
   "devDependencies": {
     "@types/jest": "^26.0.10",

@@ -1,11 +1,11 @@
-import { Stack, StackProps, CfnOutput, Duration } from 'aws-cdk-lib';
+import { Stack, StackProps, CfnOutput, Duration, RemovalPolicy } from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 import { Function, FunctionUrl, FunctionUrlAuthType, Runtime, Code, LayerVersion } from 'aws-cdk-lib/aws-lambda';
-import { InstanceClass, InstanceSize, InstanceType, SecurityGroup, Vpc } from 'aws-cdk-lib/aws-ec2';
+import { SecurityGroup, Vpc } from 'aws-cdk-lib/aws-ec2';
+import { AuroraPostgresEngineVersion, Credentials, DatabaseClusterEngine, ServerlessCluster } from 'aws-cdk-lib/aws-rds';
 
 import * as path from 'path';
-import { AuroraPostgresEngineVersion, DatabaseCluster, DatabaseClusterEngine } from 'aws-cdk-lib/aws-rds';
-
+import { Secret } from 'aws-cdk-lib/aws-secretsmanager';
 export class PrismaStack extends Stack {
   constructor(scope: Construct, id: string, props?: StackProps) {
     super(scope, id, props);
@@ -19,17 +19,35 @@ export class PrismaStack extends Stack {
       securityGroupName: 'EpicSecurityGroup',
     });
 
-    const cluster = new DatabaseCluster(this, `Cluster`, {
-      defaultDatabaseName: 'EpicDatabase',
-      engine: DatabaseClusterEngine.auroraPostgres({ version: AuroraPostgresEngineVersion.VER_13_6 }),
-      instanceProps: {
-        vpc,
-        vpcSubnets: vpc.selectSubnets({ subnets: vpc.isolatedSubnets.concat(vpc.privateSubnets) }),
-        instanceType: InstanceType.of(InstanceClass.T3, InstanceSize.MEDIUM),
-        securityGroups: [securityGroup],
+    const dbCredentials = new Secret(this, 'EpicDatabaseCredentials', {
+      secretName: 'EpicDatabaseCredentials',
+      generateSecretString: {
+        secretStringTemplate: JSON.stringify({
+          username: 'postgres',
+        }),
+        excludePunctuation: true,
+        includeSpace: false,
+        generateStringKey: 'password',
       },
-      instances: 1,
-      storageEncrypted: true,
+    });
+
+    const dbCluster = new ServerlessCluster(this, 'EpicDatabase', {
+      engine: DatabaseClusterEngine.auroraPostgres({
+        version: AuroraPostgresEngineVersion.VER_10_19,
+      }),
+      enableDataApi: true,
+      removalPolicy: RemovalPolicy.DESTROY,
+      credentials: Credentials.fromSecret(dbCredentials),
+      securityGroups: [securityGroup],
+      vpcSubnets: {
+        subnets: vpc.isolatedSubnets.concat(vpc.privateSubnets),
+      },
+      vpc: vpc,
+      scaling: {
+        minCapacity: 2,
+        maxCapacity: 4,
+        autoPause: Duration.minutes(15),
+      },
     });
 
     const prismaLayer = new LayerVersion(this, 'PrismaLayer', {
@@ -80,7 +98,7 @@ export class PrismaStack extends Stack {
 
     new CfnOutput(this, 'VpcId', { value: vpc.vpcId });
     new CfnOutput(this, 'securityGroupId', { value: securityGroup.securityGroupId });
-    new CfnOutput(this, 'clusterHostname', { value: cluster.clusterEndpoint.hostname });
+    new CfnOutput(this, 'clusterHostname', { value: dbCluster.clusterEndpoint.hostname });
     new CfnOutput(this, 'PrismaLayerVersionArn', { value: prismaLayer.layerVersionArn });
     new CfnOutput(this, 'UserFunctionArn', { value: userService.functionArn });
     new CfnOutput(this, 'UserFunctionUrl', { value: userFunctionUrl.url });
